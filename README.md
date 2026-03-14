@@ -80,8 +80,10 @@ systemctl --user enable --now hyprvoice.service
 3. Add a keybinding (Hyprland example):
 
 ```bash
-bind = SUPER, R, exec, hyprvoice toggle
+bindr = SUPER, R, exec, hyprvoice toggle
 ```
+
+See [Hyprland Keybindings](#hyprland-keybindings) for push-to-talk and other patterns.
 
 4. Test voice input:
 
@@ -90,6 +92,38 @@ hyprvoice toggle
 ```
 
 Run `hyprvoice configure` anytime for advanced settings.
+
+## Hyprland Keybindings
+
+Hyprland has two bind types that matter for voice input:
+
+- **`bind`** — fires when the key is **pressed down**
+- **`bindr`** — fires when the key is **released**
+
+### Simple toggle (recommended default)
+
+```bash
+# ~/.config/hypr/hyprland.conf
+bindr = SUPER, R, exec, hyprvoice toggle
+```
+
+Using `bindr` (release) is important: modifiers like SUPER are fully released before `hyprvoice toggle` runs, so they don't interfere with text injection. With `bind`, the modifier may still be held when text is typed, causing stuck keys or wrong characters.
+
+### Push-to-talk (hold-to-record)
+
+Combine both bind types to get hold-to-record behavior — press to start, release to stop:
+
+```bash
+# ~/.config/hypr/hyprland.conf
+bind  = SUPER, R, exec, hyprvoice toggle   # key down → start recording
+bindr = SUPER, R, exec, hyprvoice toggle    # key up   → stop and transcribe
+```
+
+This gives a walkie-talkie feel: hold the key while speaking, release when done. The daemon receives two `toggle` commands — the first starts recording, the second stops it and triggers transcription.
+
+### Why `bindr` matters
+
+When you press SUPER+R with a regular `bind`, the SUPER modifier is still physically held when the command fires. If hyprvoice tries to inject text while SUPER is down, the compositor interprets the injected keystrokes as SUPER+key combos — leading to stuck modifiers, missed characters, or unexpected window management actions. `bindr` waits until you lift the key, ensuring a clean keyboard state for injection.
 
 ## Commands
 
