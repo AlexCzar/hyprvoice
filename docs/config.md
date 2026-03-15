@@ -45,21 +45,19 @@ Hyprvoice is triggered via Hyprland keybindings. The bind type you choose affect
 
 | Keyword | Fires on | Use for |
 |---------|----------|---------|
-| `bind` | Key **press** (down) | Starting recording |
+| `bind` | Key **press** (down) | Simple toggle, starting recording |
 | `bindr` | Key **release** (up) | Stopping recording / injecting text |
 
-The critical difference: with `bindr`, modifier keys (SUPER, CTRL, etc.) are fully released before the command executes. This prevents modifiers from interfering with text injection — avoiding stuck keys, wrong characters, or accidental compositor actions.
+With `bindr`, modifier keys (SUPER, CTRL, etc.) are fully released before the command executes. This can prevent modifiers from interfering with text injection.
 
-### Simple toggle (recommended)
-
-A single `bindr` binding toggles recording on and off:
+### Simple toggle
 
 ```bash
 # ~/.config/hypr/hyprland.conf
-bindr = SUPER, R, exec, hyprvoice toggle
+bind = SUPER, R, exec, hyprvoice toggle
 ```
 
-First release starts recording, second release stops and transcribes. This is the safest default because the keyboard is always in a clean state when text is injected.
+Each press toggles between recording and idle. If you run into issues with text injection (stuck keys, wrong characters), try `bindr` instead — it fires on key release so modifiers are guaranteed released before the command runs.
 
 ### Push-to-talk (hold-to-record)
 

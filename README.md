@@ -80,7 +80,7 @@ systemctl --user enable --now hyprvoice.service
 3. Add a keybinding (Hyprland example):
 
 ```bash
-bindr = SUPER, R, exec, hyprvoice toggle
+bind = SUPER, R, exec, hyprvoice toggle
 ```
 
 See [Hyprland Keybindings](#hyprland-keybindings) for push-to-talk and other patterns.
@@ -100,14 +100,14 @@ Hyprland has two bind types that matter for voice input:
 - **`bind`** — fires when the key is **pressed down**
 - **`bindr`** — fires when the key is **released**
 
-### Simple toggle (recommended default)
+### Simple toggle
 
 ```bash
 # ~/.config/hypr/hyprland.conf
-bindr = SUPER, R, exec, hyprvoice toggle
+bind = SUPER, R, exec, hyprvoice toggle
 ```
 
-Using `bindr` (release) is important: modifiers like SUPER are fully released before `hyprvoice toggle` runs, so they don't interfere with text injection. With `bind`, the modifier may still be held when text is typed, causing stuck keys or wrong characters.
+Each press toggles between recording and idle. If you experience issues with text injection (stuck keys, wrong characters), try `bindr` instead — it fires on key release, so modifiers like SUPER are fully released before the command runs.
 
 ### Push-to-talk (hold-to-record)
 
