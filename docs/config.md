@@ -41,15 +41,6 @@ Configuration is stored in `~/.config/hyprvoice/config.toml` and changes are app
 
 Hyprvoice is triggered via Hyprland keybindings. The bind type you choose affects reliability and workflow.
 
-### `bind` vs `bindr`
-
-| Keyword | Fires on | Use for |
-|---------|----------|---------|
-| `bind` | Key **press** (down) | Simple toggle, starting recording |
-| `bindr` | Key **release** (up) | Stopping recording / injecting text |
-
-With `bindr`, modifier keys (SUPER, CTRL, etc.) are fully released before the command executes. This can prevent modifiers from interfering with text injection.
-
 ### Simple toggle
 
 ```bash
@@ -71,11 +62,14 @@ bindr = SUPER, R, exec, hyprvoice toggle    # key up   → stop and transcribe
 
 Hold the key while speaking, release when done. Both lines send `toggle` to the daemon — the first starts the pipeline, the second stops it. Because the stop fires on release, modifiers are clean for injection.
 
-### Why modifier release matters
+### `bind` vs `bindr`
 
-When SUPER+R is pressed with a regular `bind`, the SUPER key is still physically held when `hyprvoice toggle` fires. If hyprvoice then injects text (via wtype or ydotool), the compositor sees SUPER+<character> for every keystroke — triggering window management shortcuts instead of typing. Using `bindr` for the stop/inject side ensures modifiers are released first.
+| Keyword | Fires on |
+|---------|----------|
+| `bind` | Key **press** (down) |
+| `bindr` | Key **release** (up) |
 
-This is especially relevant if you use the `wtype` or `ydotool` injection backends. The `clipboard` backend is less affected since it uses paste rather than simulated keystrokes, but `bindr` is still recommended for consistency.
+With `bindr`, modifier keys (SUPER, CTRL, etc.) are fully released before the command executes. This can prevent modifiers from interfering with text injection.
 
 ## Unified Provider System
 

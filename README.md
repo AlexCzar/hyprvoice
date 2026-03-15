@@ -95,11 +95,6 @@ Run `hyprvoice configure` anytime for advanced settings.
 
 ## Hyprland Keybindings
 
-Hyprland has two bind types that matter for voice input:
-
-- **`bind`** — fires when the key is **pressed down**
-- **`bindr`** — fires when the key is **released**
-
 ### Simple toggle
 
 ```bash
@@ -121,9 +116,14 @@ bindr = SUPER, R, exec, hyprvoice toggle    # key up   → stop and transcribe
 
 This gives a walkie-talkie feel: hold the key while speaking, release when done. The daemon receives two `toggle` commands — the first starts recording, the second stops it and triggers transcription.
 
-### Why `bindr` matters
+### `bind` vs `bindr`
 
-When you press SUPER+R with a regular `bind`, the SUPER modifier is still physically held when the command fires. If hyprvoice tries to inject text while SUPER is down, the compositor interprets the injected keystrokes as SUPER+key combos — leading to stuck modifiers, missed characters, or unexpected window management actions. `bindr` waits until you lift the key, ensuring a clean keyboard state for injection.
+| Keyword | Fires on |
+|---------|----------|
+| `bind` | Key **press** (down) |
+| `bindr` | Key **release** (up) |
+
+With `bindr`, modifier keys (SUPER, CTRL, etc.) are fully released before the command executes. This can prevent modifiers from interfering with text injection.
 
 ## Commands
 
