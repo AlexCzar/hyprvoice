@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"github.com/BurntSushi/toml"
 )
@@ -70,6 +71,7 @@ func LoadOrLegacy() (*Config, bool, error) {
 
 	config.applyLLMDefaults()
 	config.applyThreadsDefault()
+	config.applyInjectionDefaults()
 
 	log.Printf("Config: configuration loaded successfully")
 	return &config, false, nil
@@ -110,5 +112,34 @@ func (c *Config) applyLLMDefaults() {
 		pp.AddPunctuation = true
 		pp.FixGrammar = true
 		pp.RemoveFillerWords = true
+	}
+}
+
+// applyInjectionDefaults coerces zero timeout values to defaults
+func (c *Config) applyInjectionDefaults() {
+	const (
+		defaultTimeout = 5000 * time.Millisecond
+		defaultClipboardTimeout = 3000 * time.Millisecond
+		defaultTypedelay = 1 * time.Millisecond
+		defaultTypehold = 2 * time.Millisecond
+	)
+
+	if c.Injection.DotoolTimeout <= 0 {
+		c.Injection.DotoolTimeout = defaultTimeout
+	}
+	if c.Injection.YdotoolTimeout <= 0 {
+		c.Injection.YdotoolTimeout = defaultTimeout
+	}
+	if c.Injection.WtypeTimeout <= 0 {
+		c.Injection.WtypeTimeout = defaultTimeout
+	}
+	if c.Injection.ClipboardTimeout <= 0 {
+		c.Injection.ClipboardTimeout = defaultClipboardTimeout
+	}
+	if c.Injection.DotoolTypedelay < 0 {
+		c.Injection.DotoolTypedelay = defaultTypedelay
+	}
+	if c.Injection.DotoolTypehold < 0 {
+		c.Injection.DotoolTypehold = defaultTypehold
 	}
 }

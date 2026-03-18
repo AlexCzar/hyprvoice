@@ -117,6 +117,9 @@ func Save(cfg *Config) error {
 	sb.WriteString(fmt.Sprintf("  ydotool_timeout = %q\n", cfg.Injection.YdotoolTimeout.String()))
 	sb.WriteString(fmt.Sprintf("  wtype_timeout = %q\n", cfg.Injection.WtypeTimeout.String()))
 	sb.WriteString(fmt.Sprintf("  clipboard_timeout = %q\n", cfg.Injection.ClipboardTimeout.String()))
+	sb.WriteString(fmt.Sprintf("  dotool_timeout = %q\n", cfg.Injection.DotoolTimeout.String()))
+	sb.WriteString(fmt.Sprintf("  dotool_typedelay = %q\n", cfg.Injection.DotoolTypedelay.String()))
+	sb.WriteString(fmt.Sprintf("  dotool_typehold = %q\n", cfg.Injection.DotoolTypehold.String()))
 	sb.WriteString("\n")
 
 	// Notifications
@@ -272,10 +275,13 @@ keywords = []
 # ─────────────────────────────────────────────────────────────────────────────
 
 [injection]
-  backends = ["ydotool", "wtype", "clipboard"]  # Ordered fallback chain (tries each until one succeeds)
+  backends = ["ydotool", "wtype", "clipboard", "dotool"]  # Ordered fallback chain (tries each until one succeeds)
   ydotool_timeout = "5s"       # Timeout for ydotool commands
   wtype_timeout = "5s"         # Timeout for wtype commands
   clipboard_timeout = "3s"     # Timeout for clipboard operations
+  dotool_timeout = "5s"        # Timeout for dotool commands
+  dotool_typedelay = "1ms"     # Delay between keystrokes for dotool
+  dotool_typehold = "2ms"      # Key hold duration for dotool
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Desktop Notifications
