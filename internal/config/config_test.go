@@ -33,9 +33,13 @@ func createTestConfig() *Config {
 			"openai": {APIKey: "test-api-key"},
 		},
 		Injection: InjectionConfig{
-			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+			Backends:         []string{"ydotool", "wtype", "clipboard"},
+			YdotoolTimeout:   5 * time.Second,
 			WtypeTimeout:     5 * time.Second,
 			ClipboardTimeout: 3 * time.Second,
+			DotoolTimeout:    5 * time.Second,
+			DotoolTypedelay:  1 * time.Millisecond,
+			DotoolTypehold:   2 * time.Millisecond,
 		},
 		Notifications: NotificationsConfig{
 			Enabled: true,
@@ -60,9 +64,13 @@ func createTestConfigWithInvalidValues() *Config {
 			Model:    "", // Invalid
 		},
 		Injection: InjectionConfig{
-			Backends: []string{"invalid"}, YdotoolTimeout: 5 * time.Second, // Invalid
+			Backends:         []string{"invalid"}, // Invalid
+			YdotoolTimeout:   5 * time.Second,
 			WtypeTimeout:     0, // Invalid
 			ClipboardTimeout: 0, // Invalid
+			DotoolTimeout:    0, // Invalid
+			DotoolTypedelay:  0,
+			DotoolTypehold:   0,
 		},
 		Notifications: NotificationsConfig{
 			Type: "invalid", // Invalid
@@ -105,9 +113,13 @@ func TestConfig_Validate(t *testing.T) {
 					"openai": {APIKey: "test-key"},
 				},
 				Injection: InjectionConfig{
-					Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+					Backends:         []string{"ydotool", "wtype", "clipboard"},
+					YdotoolTimeout:   5 * time.Second,
 					WtypeTimeout:     time.Second,
 					ClipboardTimeout: time.Second,
+					DotoolTimeout:    5 * time.Second,
+					DotoolTypedelay:  1 * time.Millisecond,
+					DotoolTypehold:   2 * time.Millisecond,
 				},
 				Notifications: NotificationsConfig{
 					Type: "log",
@@ -134,9 +146,13 @@ func TestConfig_Validate(t *testing.T) {
 					"openai": {APIKey: "test-key"},
 				},
 				Injection: InjectionConfig{
-					Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+					Backends:         []string{"ydotool", "wtype", "clipboard"},
+					YdotoolTimeout:   5 * time.Second,
 					WtypeTimeout:     time.Second,
 					ClipboardTimeout: time.Second,
+					DotoolTimeout:    5 * time.Second,
+					DotoolTypedelay:  1 * time.Millisecond,
+					DotoolTypehold:   2 * time.Millisecond,
 				},
 				Notifications: NotificationsConfig{
 					Type: "log",
@@ -163,9 +179,13 @@ func TestConfig_Validate(t *testing.T) {
 					"openai": {APIKey: "test-key"},
 				},
 				Injection: InjectionConfig{
-					Backends: []string{"invalid"}, YdotoolTimeout: 5 * time.Second,
+					Backends:         []string{"invalid"},
+					YdotoolTimeout:   5 * time.Second,
 					WtypeTimeout:     time.Second,
 					ClipboardTimeout: time.Second,
+					DotoolTimeout:    5 * time.Second,
+					DotoolTypedelay:  1 * time.Millisecond,
+					DotoolTypehold:   2 * time.Millisecond,
 				},
 				Notifications: NotificationsConfig{
 					Type: "log",
@@ -192,9 +212,13 @@ func TestConfig_Validate(t *testing.T) {
 					"openai": {APIKey: "test-key"},
 				},
 				Injection: InjectionConfig{
-					Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+					Backends:         []string{"ydotool", "wtype", "clipboard"},
+					YdotoolTimeout:   5 * time.Second,
 					WtypeTimeout:     time.Second,
 					ClipboardTimeout: time.Second,
+					DotoolTimeout:    5 * time.Second,
+					DotoolTypedelay:  1 * time.Millisecond,
+					DotoolTypehold:   2 * time.Millisecond,
 				},
 				Notifications: NotificationsConfig{
 					Type: "invalid",
@@ -222,9 +246,13 @@ func TestConfig_Validate(t *testing.T) {
 					"openai": {APIKey: "test-key"},
 				},
 				Injection: InjectionConfig{
-					Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+					Backends:         []string{"ydotool", "wtype", "clipboard"},
+					YdotoolTimeout:   5 * time.Second,
 					WtypeTimeout:     time.Second,
 					ClipboardTimeout: time.Second,
+					DotoolTimeout:    5 * time.Second,
+					DotoolTypedelay:  1 * time.Millisecond,
+					DotoolTypehold:   2 * time.Millisecond,
 				},
 				Notifications: NotificationsConfig{
 					Type: "log",
@@ -252,9 +280,13 @@ func TestConfig_Validate(t *testing.T) {
 					"openai": {APIKey: "test-key"},
 				},
 				Injection: InjectionConfig{
-					Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+					Backends:         []string{"ydotool", "wtype", "clipboard"},
+					YdotoolTimeout:   5 * time.Second,
 					WtypeTimeout:     time.Second,
 					ClipboardTimeout: time.Second,
+					DotoolTimeout:    5 * time.Second,
+					DotoolTypedelay:  1 * time.Millisecond,
+					DotoolTypehold:   2 * time.Millisecond,
 				},
 				Notifications: NotificationsConfig{
 					Type: "log",
@@ -337,6 +369,9 @@ backends = ["ydotool", "wtype", "clipboard"]
 ydotool_timeout = "5s"
 wtype_timeout = "5s"
 clipboard_timeout = "3s"
+dotool_timeout = "5s"
+dotool_typedelay = "1ms"
+dotool_typehold = "2ms"
 
 [notifications]
 enabled = true
@@ -904,6 +939,9 @@ func TestConfig_Validate_OpenAI_WithoutAPIKey(t *testing.T) {
 			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
+			DotoolTimeout:    5 * time.Second,
+			DotoolTypedelay:  1 * time.Millisecond,
+			DotoolTypehold:   2 * time.Millisecond,
 		},
 		Notifications: NotificationsConfig{
 			Type: "log",
@@ -943,6 +981,9 @@ func TestConfig_Validate_OpenAI_WithEnvVarAPIKey(t *testing.T) {
 			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
+			DotoolTimeout:    5 * time.Second,
+			DotoolTypedelay:  1 * time.Millisecond,
+			DotoolTypehold:   2 * time.Millisecond,
 		},
 		Notifications: NotificationsConfig{
 			Type: "log",
@@ -987,6 +1028,9 @@ func TestConfig_Validate_RecordingTimeout(t *testing.T) {
 			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
+			DotoolTimeout:    5 * time.Second,
+			DotoolTypedelay:  1 * time.Millisecond,
+			DotoolTypehold:   2 * time.Millisecond,
 		},
 		Notifications: NotificationsConfig{
 			Type: "log",
@@ -1020,6 +1064,9 @@ func TestConfig_Validate_InjectionTimeouts(t *testing.T) {
 			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     0, // Invalid timeout
 			ClipboardTimeout: 0, // Invalid timeout
+			DotoolTimeout:    5 * time.Second,
+			DotoolTypedelay:  1 * time.Millisecond,
+			DotoolTypehold:   2 * time.Millisecond,
 		},
 		Notifications: NotificationsConfig{
 			Type: "log",
@@ -1053,6 +1100,9 @@ func TestConfig_Validate_RecordingBufferSizes(t *testing.T) {
 			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
+			DotoolTimeout:    5 * time.Second,
+			DotoolTypedelay:  1 * time.Millisecond,
+			DotoolTypehold:   2 * time.Millisecond,
 		},
 		Notifications: NotificationsConfig{
 			Type: "log",
@@ -1087,6 +1137,9 @@ func TestConfig_Validate_GroqTranscription(t *testing.T) {
 			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
+			DotoolTimeout:    5 * time.Second,
+			DotoolTypedelay:  1 * time.Millisecond,
+			DotoolTypehold:   2 * time.Millisecond,
 		},
 		Notifications: NotificationsConfig{
 			Type: "log",
@@ -1121,6 +1174,9 @@ func TestConfig_Validate_GroqInvalidModel(t *testing.T) {
 			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
+			DotoolTimeout:    5 * time.Second,
+			DotoolTypedelay:  1 * time.Millisecond,
+			DotoolTypehold:   2 * time.Millisecond,
 		},
 		Notifications: NotificationsConfig{
 			Type: "log",
@@ -1151,6 +1207,9 @@ func TestConfig_Validate_GroqWithoutAPIKey(t *testing.T) {
 			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
+			DotoolTimeout:    5 * time.Second,
+			DotoolTypedelay:  1 * time.Millisecond,
+			DotoolTypehold:   2 * time.Millisecond,
 		},
 		Notifications: NotificationsConfig{
 			Type: "log",
@@ -1190,6 +1249,9 @@ func TestConfig_Validate_GroqWithEnvVarAPIKey(t *testing.T) {
 			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
+			DotoolTimeout:    5 * time.Second,
+			DotoolTypedelay:  1 * time.Millisecond,
+			DotoolTypehold:   2 * time.Millisecond,
 		},
 		Notifications: NotificationsConfig{
 			Type: "log",
@@ -1314,6 +1376,9 @@ func TestConfig_ProvidersMap(t *testing.T) {
 			YdotoolTimeout:   5 * time.Second,
 			WtypeTimeout:     5 * time.Second,
 			ClipboardTimeout: 3 * time.Second,
+			DotoolTimeout:    5 * time.Second,
+			DotoolTypedelay:  1 * time.Millisecond,
+			DotoolTypehold:   2 * time.Millisecond,
 		},
 		Notifications: NotificationsConfig{Type: "log"},
 	}
@@ -1368,6 +1433,9 @@ func TestConfig_LLMConfig(t *testing.T) {
 			YdotoolTimeout:   5 * time.Second,
 			WtypeTimeout:     5 * time.Second,
 			ClipboardTimeout: 3 * time.Second,
+			DotoolTimeout:    5 * time.Second,
+			DotoolTypedelay:  1 * time.Millisecond,
+			DotoolTypehold:   2 * time.Millisecond,
 		},
 		Notifications: NotificationsConfig{Type: "log"},
 	}
@@ -1430,6 +1498,9 @@ func TestConfig_LLMValidation(t *testing.T) {
 				YdotoolTimeout:   5 * time.Second,
 				WtypeTimeout:     5 * time.Second,
 				ClipboardTimeout: 3 * time.Second,
+				DotoolTimeout:    5 * time.Second,
+				DotoolTypedelay:  1 * time.Millisecond,
+				DotoolTypehold:   2 * time.Millisecond,
 			},
 			Notifications: NotificationsConfig{Type: "log"},
 		}
@@ -1551,6 +1622,9 @@ backends = ["clipboard"]
 ydotool_timeout = "5s"
 wtype_timeout = "5s"
 clipboard_timeout = "3s"
+dotool_timeout = "5s"
+dotool_typedelay = "1ms"
+dotool_typehold = "2ms"
 
 [notifications]
 type = "log"`
@@ -1691,6 +1765,9 @@ func TestConfig_Validate_WhisperCpp(t *testing.T) {
 				YdotoolTimeout:   5 * time.Second,
 				WtypeTimeout:     5 * time.Second,
 				ClipboardTimeout: 3 * time.Second,
+				DotoolTimeout:    5 * time.Second,
+				DotoolTypedelay:  1 * time.Millisecond,
+				DotoolTypehold:   2 * time.Millisecond,
 			},
 			Notifications: NotificationsConfig{Type: "log"},
 		}
@@ -1891,6 +1968,9 @@ func TestConfig_Validate_TranscriptionLanguage(t *testing.T) {
 				YdotoolTimeout:   5 * time.Second,
 				WtypeTimeout:     5 * time.Second,
 				ClipboardTimeout: 3 * time.Second,
+				DotoolTimeout:    5 * time.Second,
+				DotoolTypedelay:  1 * time.Millisecond,
+				DotoolTypehold:   2 * time.Millisecond,
 			},
 			Notifications: NotificationsConfig{Type: "log"},
 		}

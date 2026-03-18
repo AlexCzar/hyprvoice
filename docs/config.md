@@ -455,10 +455,13 @@ Configurable text injection with multiple backends:
 
 ```toml
 [injection]
-backends = ["ydotool", "wtype", "clipboard"]  # Ordered fallback chain
+backends = ["ydotool", "wtype", "clipboard", "dotool"]  # Ordered fallback chain
 ydotool_timeout = "5s"
 wtype_timeout = "5s"
 clipboard_timeout = "3s"
+dotool_timeout = "5s"
+dotool_typedelay = "1ms"
+dotool_typehold = "2ms"
 ```
 
 ### Injection Backends
@@ -466,6 +469,7 @@ clipboard_timeout = "3s"
 - **`ydotool`**: Uses ydotool (requires `ydotoold` daemon for ydotool v1.0.0+). Most compatible with Chromium/Electron apps.
 - **`wtype`**: Uses wtype for Wayland. May have issues with some Chromium-based apps (known upstream bug).
 - **`clipboard`**: Copies text to clipboard only. Most reliable, but requires manual paste.
+- **`dotool`**: Uses dotool (incredibly fast typing simulation using uinput, requires the user to be in the `input` group)
 
 ### Fallback Chain
 
@@ -479,7 +483,7 @@ backends = ["clipboard"]
 backends = ["wtype", "clipboard"]
 
 # Full fallback chain (default) - best compatibility
-backends = ["ydotool", "wtype", "clipboard"]
+backends = ["ydotool", "wtype", "clipboard", "dotool"]
 
 # ydotool only (if you have it set up)
 backends = ["ydotool"]
@@ -502,6 +506,38 @@ sudo usermod -aG input $USER
 #     kb_layout = us
 # }
 ```
+
+### dotool Setup
+
+dotool requires the dotoold daemon running and access to `/dev/uinput`.
+
+```bash
+sudo usermod -aG input $USER
+# Then logout/login
+```
+
+This backend relies on dotoold/dotoolc for minimal latency, so you need to make sure dotoold is running, you can start it manually, or write a small user-level systemd service, like this:
+
+```ini
+[Unit]
+Description=dotool daemon
+Documentation=https://sr.ht/~geb/dotool/
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/dotoold
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=hyprvoice.service
+```
+
+```bash
+systemctl --user enable --now dotoold.service
+```
+
+The default configuration for dotool typing is 1ms between keys and 2ms hold, you can try decreasing them further, but at some point it breaks (the contributor who added this backend uses 0ms and 1ms respectively).
 
 ## Notifications
 
