@@ -565,6 +565,7 @@ func newInjectionScreen(state *wizardState, onBack func() screen) screen {
 	items := []toggleItem{
 		{title: "ydotool", desc: "Best for Chromium/Electron. Requires ydotoold.", value: "ydotool", selected: selectedSet["ydotool"]},
 		{title: "wtype", desc: "Native Wayland typing.", value: "wtype", selected: selectedSet["wtype"]},
+		{title: "dotool", desc: "Send keystrokes via dotool. Requires dotoolc.", value: "dotool", selected: selectedSet["dotool"]},
 		{title: "clipboard", desc: "Copy to clipboard only.", value: "clipboard", selected: selectedSet["clipboard"]},
 	}
 	desc := []string{"Backends are tried in order until one succeeds.", "Tip: press / to filter."}
@@ -820,6 +821,24 @@ func newInjectionTimeoutsScreen(state *wizardState, onBack func() screen) screen
 			}
 			return nil
 		}),
+		makeInputField("dotool", "dotool Timeout", "Examples: 5s, 10s.", cfg.DotoolTimeout.String(), "5s", func(s string) error {
+			if _, err := time.ParseDuration(s); err != nil {
+				return fmt.Errorf("invalid duration format")
+			}
+			return nil
+		}),
+		makeInputField("dotool_typedelay", "dotool Typedelay", "Delay between keypresses in milliseconds. Examples: 1ms, 5ms.", cfg.DotoolTypedelay.String(), "1ms", func(s string) error {
+			if _, err := time.ParseDuration(s); err != nil {
+				return fmt.Errorf("invalid duration format")
+			}
+			return nil
+		}),
+		makeInputField("dotool_typehold", "dotool Typehold", "Duration each key is held in milliseconds. Examples: 2ms, 5ms.", cfg.DotoolTypehold.String(), "2ms", func(s string) error {
+			if _, err := time.ParseDuration(s); err != nil {
+				return fmt.Errorf("invalid duration format")
+			}
+			return nil
+		}),
 		makeInputField("clipboard", "Clipboard Timeout", "Examples: 3s, 5s.", cfg.ClipboardTimeout.String(), "3s", func(s string) error {
 			if _, err := time.ParseDuration(s); err != nil {
 				return fmt.Errorf("invalid duration format")
@@ -830,6 +849,9 @@ func newInjectionTimeoutsScreen(state *wizardState, onBack func() screen) screen
 	screen := newFormScreen(state, "Injection Timeouts", nil, fields, func(values map[string]string) screen {
 		state.cfg.Injection.YdotoolTimeout, _ = time.ParseDuration(values["ydotool"])
 		state.cfg.Injection.WtypeTimeout, _ = time.ParseDuration(values["wtype"])
+		state.cfg.Injection.DotoolTimeout, _ = time.ParseDuration(values["dotool"])
+		state.cfg.Injection.DotoolTypedelay, _ = time.ParseDuration(values["dotool_typedelay"])
+		state.cfg.Injection.DotoolTypehold, _ = time.ParseDuration(values["dotool_typehold"])
 		state.cfg.Injection.ClipboardTimeout, _ = time.ParseDuration(values["clipboard"])
 		return onBack()
 	}, onBack)
@@ -1040,7 +1062,7 @@ func formatAdvancedRecordingLabel(cfg *config.Config) string {
 }
 
 func formatAdvancedInjectionTimeoutLabel(cfg *config.Config) string {
-	return fmt.Sprintf("Injection Timeouts (ydotool=%s, wtype=%s, clipboard=%s)", cfg.Injection.YdotoolTimeout, cfg.Injection.WtypeTimeout, cfg.Injection.ClipboardTimeout)
+	return fmt.Sprintf("Injection Timeouts (ydotool=%s, wtype=%s, dotool=%s, clipboard=%s)", cfg.Injection.YdotoolTimeout, cfg.Injection.WtypeTimeout, cfg.Injection.DotoolTimeout, cfg.Injection.ClipboardTimeout)
 }
 
 func getNotificationMessage(cfg *config.Config, def notify.MessageDef) (string, string) {
