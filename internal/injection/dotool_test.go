@@ -40,21 +40,21 @@ cat > "$1"
 			text:  "hello\nworld",
 			delay: 1,
 			hold:  2,
-			wantCmds: "typedelay 1\ntypehold 2\ntype hello\nkey Return\ntype world\n",
+			wantCmds: "typedelay 1\ntypehold 2\ntype hello\nkey enter\ntype world\n",
 		},
 		{
 			name:  "three lines",
 			text:  "a\nb\nc",
 			delay: 5,
 			hold:  10,
-			wantCmds: "typedelay 5\ntypehold 10\ntype a\nkey Return\ntype b\nkey Return\ntype c\n",
+			wantCmds: "typedelay 5\ntypehold 10\ntype a\nkey enter\ntype b\nkey enter\ntype c\n",
 		},
 		{
 			name:  "trailing newline",
 			text:  "hello\n",
 			delay: 1,
 			hold:  2,
-			wantCmds: "typedelay 1\ntypehold 2\ntype hello\nkey Return\ntype \n",
+			wantCmds: "typedelay 1\ntypehold 2\ntype hello\n",
 		},
 	}
 
@@ -68,7 +68,7 @@ cat > "$1"
 			for i, line := range lines {
 				fmt.Fprintf(&input, "type %s\n", line)
 				if i < len(lines)-1 {
-					fmt.Fprintf(&input, "key Return\n")
+					fmt.Fprintf(&input, "key enter\n")
 				}
 			}
 
@@ -156,7 +156,7 @@ exit 0
 		t.Fatalf("failed to read captured stdin: %v", err)
 	}
 
-	want := "typedelay 1\ntypehold 2\ntype hello\nkey Return\ntype world\n"
+	want := "typedelay 1\ntypehold 2\ntype hello\nkey enter\ntype world\n"
 	if string(got) != want {
 		t.Errorf("captured stdin mismatch\nwant:\n%s\ngot:\n%s", want, string(got))
 	}

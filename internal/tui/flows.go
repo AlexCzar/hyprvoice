@@ -555,7 +555,7 @@ func newKeywordsScreen(state *wizardState, onBack func() screen) screen {
 func newInjectionScreen(state *wizardState, onBack func() screen) screen {
 	selected := state.cfg.Injection.Backends
 	if len(selected) == 0 {
-		selected = []string{"ydotool", "wtype", "clipboard"}
+		selected = []string{"ydotool", "wtype", "dotool", "clipboard"}
 	}
 	selectedSet := make(map[string]bool, len(selected))
 	for _, b := range selected {

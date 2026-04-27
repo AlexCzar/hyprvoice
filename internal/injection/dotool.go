@@ -59,6 +59,7 @@ func (c *DotoolBackend) Inject(ctx context.Context, text string, timeout time.Du
 		fmt.Fprintf(&typeCommands, "type %s\n", line)
 		if i < len(lines)-1 {
 			fmt.Fprintf(&typeCommands, "key Return\n")
+			fmt.Fprintf(&typeCommands, "key enter\n")
 		}
 	}
 
