@@ -455,13 +455,13 @@ Configurable text injection with multiple backends:
 
 ```toml
 [injection]
-backends = ["ydotool", "wtype", "clipboard", "dotool"]  # Ordered fallback chain
+backends = ["ydotool", "wtype", "dotool", "clipboard"]  # Ordered fallback chain
 ydotool_timeout = "5s"
 wtype_timeout = "5s"
-clipboard_timeout = "3s"
 dotool_timeout = "5s"
 dotool_typedelay = "1ms"
 dotool_typehold = "2ms"
+clipboard_timeout = "3s"
 ```
 
 ### Injection Backends
@@ -483,7 +483,7 @@ backends = ["clipboard"]
 backends = ["wtype", "clipboard"]
 
 # Full fallback chain (default) - best compatibility
-backends = ["ydotool", "wtype", "clipboard", "dotool"]
+backends = ["ydotool", "wtype", "dotool", "clipboard"]
 
 # ydotool only (if you have it set up)
 backends = ["ydotool"]

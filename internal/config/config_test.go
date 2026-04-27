@@ -33,7 +33,7 @@ func createTestConfig() *Config {
 			"openai": {APIKey: "test-api-key"},
 		},
 		Injection: InjectionConfig{
-			Backends:         []string{"ydotool", "wtype", "clipboard"},
+			Backends:         []string{"ydotool", "wtype", "dotool", "clipboard"},
 			YdotoolTimeout:   5 * time.Second,
 			WtypeTimeout:     5 * time.Second,
 			ClipboardTimeout: 3 * time.Second,
@@ -113,7 +113,7 @@ func TestConfig_Validate(t *testing.T) {
 					"openai": {APIKey: "test-key"},
 				},
 				Injection: InjectionConfig{
-					Backends:         []string{"ydotool", "wtype", "clipboard"},
+					Backends:         []string{"ydotool", "wtype", "dotool", "clipboard"},
 					YdotoolTimeout:   5 * time.Second,
 					WtypeTimeout:     time.Second,
 					ClipboardTimeout: time.Second,
@@ -146,7 +146,7 @@ func TestConfig_Validate(t *testing.T) {
 					"openai": {APIKey: "test-key"},
 				},
 				Injection: InjectionConfig{
-					Backends:         []string{"ydotool", "wtype", "clipboard"},
+					Backends:         []string{"ydotool", "wtype", "dotool", "clipboard"},
 					YdotoolTimeout:   5 * time.Second,
 					WtypeTimeout:     time.Second,
 					ClipboardTimeout: time.Second,
@@ -212,7 +212,7 @@ func TestConfig_Validate(t *testing.T) {
 					"openai": {APIKey: "test-key"},
 				},
 				Injection: InjectionConfig{
-					Backends:         []string{"ydotool", "wtype", "clipboard"},
+					Backends:         []string{"ydotool", "wtype", "dotool", "clipboard"},
 					YdotoolTimeout:   5 * time.Second,
 					WtypeTimeout:     time.Second,
 					ClipboardTimeout: time.Second,
@@ -246,7 +246,7 @@ func TestConfig_Validate(t *testing.T) {
 					"openai": {APIKey: "test-key"},
 				},
 				Injection: InjectionConfig{
-					Backends:         []string{"ydotool", "wtype", "clipboard"},
+					Backends:         []string{"ydotool", "wtype", "dotool", "clipboard"},
 					YdotoolTimeout:   5 * time.Second,
 					WtypeTimeout:     time.Second,
 					ClipboardTimeout: time.Second,
@@ -280,7 +280,7 @@ func TestConfig_Validate(t *testing.T) {
 					"openai": {APIKey: "test-key"},
 				},
 				Injection: InjectionConfig{
-					Backends:         []string{"ydotool", "wtype", "clipboard"},
+					Backends:         []string{"ydotool", "wtype", "dotool", "clipboard"},
 					YdotoolTimeout:   5 * time.Second,
 					WtypeTimeout:     time.Second,
 					ClipboardTimeout: time.Second,
@@ -365,7 +365,7 @@ provider = "openai"
 model = "whisper-1"
 
 [injection]
-backends = ["ydotool", "wtype", "clipboard"]
+backends = ["ydotool", "wtype", "dotool", "clipboard"]
 ydotool_timeout = "5s"
 wtype_timeout = "5s"
 clipboard_timeout = "3s"
@@ -936,7 +936,7 @@ func TestConfig_Validate_OpenAI_WithoutAPIKey(t *testing.T) {
 			Model:    "whisper-1",
 		},
 		Injection: InjectionConfig{
-			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+			Backends: []string{"ydotool", "wtype", "dotool", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
 			DotoolTimeout:    5 * time.Second,
@@ -978,7 +978,7 @@ func TestConfig_Validate_OpenAI_WithEnvVarAPIKey(t *testing.T) {
 			Model:    "whisper-1",
 		},
 		Injection: InjectionConfig{
-			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+			Backends: []string{"ydotool", "wtype", "dotool", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
 			DotoolTimeout:    5 * time.Second,
@@ -1025,7 +1025,7 @@ func TestConfig_Validate_RecordingTimeout(t *testing.T) {
 			"openai": {APIKey: "test-key"},
 		},
 		Injection: InjectionConfig{
-			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+			Backends: []string{"ydotool", "wtype", "dotool", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
 			DotoolTimeout:    5 * time.Second,
@@ -1061,7 +1061,7 @@ func TestConfig_Validate_InjectionTimeouts(t *testing.T) {
 			"openai": {APIKey: "test-key"},
 		},
 		Injection: InjectionConfig{
-			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+			Backends: []string{"ydotool", "wtype", "dotool", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     0, // Invalid timeout
 			ClipboardTimeout: 0, // Invalid timeout
 			DotoolTimeout:    5 * time.Second,
@@ -1097,7 +1097,7 @@ func TestConfig_Validate_RecordingBufferSizes(t *testing.T) {
 			"openai": {APIKey: "test-key"},
 		},
 		Injection: InjectionConfig{
-			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+			Backends: []string{"ydotool", "wtype", "dotool", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
 			DotoolTimeout:    5 * time.Second,
@@ -1134,7 +1134,7 @@ func TestConfig_Validate_GroqTranscription(t *testing.T) {
 			"groq": {APIKey: "gsk-test-key"},
 		},
 		Injection: InjectionConfig{
-			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+			Backends: []string{"ydotool", "wtype", "dotool", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
 			DotoolTimeout:    5 * time.Second,
@@ -1171,7 +1171,7 @@ func TestConfig_Validate_GroqInvalidModel(t *testing.T) {
 			"groq": {APIKey: "gsk-test-key"},
 		},
 		Injection: InjectionConfig{
-			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+			Backends: []string{"ydotool", "wtype", "dotool", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
 			DotoolTimeout:    5 * time.Second,
@@ -1204,7 +1204,7 @@ func TestConfig_Validate_GroqWithoutAPIKey(t *testing.T) {
 			Model:    "whisper-large-v3",
 		},
 		Injection: InjectionConfig{
-			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+			Backends: []string{"ydotool", "wtype", "dotool", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
 			DotoolTimeout:    5 * time.Second,
@@ -1246,7 +1246,7 @@ func TestConfig_Validate_GroqWithEnvVarAPIKey(t *testing.T) {
 			Model:    "whisper-large-v3",
 		},
 		Injection: InjectionConfig{
-			Backends: []string{"ydotool", "wtype", "clipboard"}, YdotoolTimeout: 5 * time.Second,
+			Backends: []string{"ydotool", "wtype", "dotool", "clipboard"}, YdotoolTimeout: 5 * time.Second,
 			WtypeTimeout:     time.Second,
 			ClipboardTimeout: time.Second,
 			DotoolTimeout:    5 * time.Second,
