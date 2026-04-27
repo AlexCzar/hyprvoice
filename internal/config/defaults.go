@@ -20,7 +20,7 @@ func DefaultConfig() *Config {
 			Threads:   0,
 		},
 		Injection: InjectionConfig{
-			Backends:         []string{"ydotool", "wtype", "clipboard", "dotool"},
+			Backends:         []string{"ydotool", "wtype", "dotool", "clipboard"},
 			YdotoolTimeout:   5 * time.Second,
 			WtypeTimeout:     5 * time.Second,
 			ClipboardTimeout: 3 * time.Second,

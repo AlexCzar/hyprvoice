@@ -71,7 +71,7 @@ func LoadOrLegacy() (*Config, bool, error) {
 
 	config.applyLLMDefaults()
 	config.applyThreadsDefault()
-	config.applyInjectionDefaults()
+	config.applyInjectionDefaults(meta)
 
 	log.Printf("Config: configuration loaded successfully")
 	return &config, false, nil
@@ -115,8 +115,8 @@ func (c *Config) applyLLMDefaults() {
 	}
 }
 
-// applyInjectionDefaults coerces zero timeout values to defaults
-func (c *Config) applyInjectionDefaults() {
+// applyInjectionDefaults applies defaults only for missing fields (not explicitly set in TOML)
+func (c *Config) applyInjectionDefaults(meta toml.MetaData) {
 	const (
 		defaultTimeout = 5000 * time.Millisecond
 		defaultClipboardTimeout = 3000 * time.Millisecond
@@ -124,22 +124,23 @@ func (c *Config) applyInjectionDefaults() {
 		defaultTypehold = 2 * time.Millisecond
 	)
 
-	if c.Injection.DotoolTimeout <= 0 {
-		c.Injection.DotoolTimeout = defaultTimeout
-	}
-	if c.Injection.YdotoolTimeout <= 0 {
+	// Only apply defaults if field was not explicitly defined in TOML
+	if !meta.IsDefined("injection", "ydotool_timeout") && c.Injection.YdotoolTimeout == 0 {
 		c.Injection.YdotoolTimeout = defaultTimeout
 	}
-	if c.Injection.WtypeTimeout <= 0 {
+	if !meta.IsDefined("injection", "wtype_timeout") && c.Injection.WtypeTimeout == 0 {
 		c.Injection.WtypeTimeout = defaultTimeout
 	}
-	if c.Injection.ClipboardTimeout <= 0 {
+	if !meta.IsDefined("injection", "clipboard_timeout") && c.Injection.ClipboardTimeout == 0 {
 		c.Injection.ClipboardTimeout = defaultClipboardTimeout
 	}
-	if c.Injection.DotoolTypedelay < 0 {
+	if !meta.IsDefined("injection", "dotool_timeout") && c.Injection.DotoolTimeout == 0 {
+		c.Injection.DotoolTimeout = defaultTimeout
+	}
+	if !meta.IsDefined("injection", "dotool_typedelay") && c.Injection.DotoolTypedelay == 0 {
 		c.Injection.DotoolTypedelay = defaultTypedelay
 	}
-	if c.Injection.DotoolTypehold < 0 {
+	if !meta.IsDefined("injection", "dotool_typehold") && c.Injection.DotoolTypehold == 0 {
 		c.Injection.DotoolTypehold = defaultTypehold
 	}
 }
