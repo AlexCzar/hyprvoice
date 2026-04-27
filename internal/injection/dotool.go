@@ -54,8 +54,12 @@ func (c *DotoolBackend) Inject(ctx context.Context, text string, timeout time.Du
 	}
 
 	var typeCommands strings.Builder
-	for line := range strings.SplitSeq(text, "\n") {
+	lines := strings.Split(text, "\n")
+	for i, line := range lines {
 		fmt.Fprintf(&typeCommands, "type %s\n", line)
+		if i < len(lines)-1 {
+			fmt.Fprintf(&typeCommands, "key Return\n")
+		}
 	}
 
 	if _, err := fmt.Fprintf(input, "typedelay %v\ntypehold %v\n%s", c.delayMs, c.holdMs, typeCommands.String()); err != nil {
