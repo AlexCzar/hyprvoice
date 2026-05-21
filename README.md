@@ -314,7 +314,7 @@ flowchart LR
   subgraph Pipeline
     A["Audio Capture"]
     T["Transcribing"]
-    I["Injecting (wtype + clipboard)"]
+    I["Injecting (ydotool + wtype + dotool + clipboard)"]
   end
   N["notify-send/log"]
 

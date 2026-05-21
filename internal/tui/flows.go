@@ -721,7 +721,7 @@ func newAdvancedMenuScreen(state *wizardState, onBack func() screen, onboarding 
 	if !onboarding {
 		items = append(items, optionItem{title: formatInjectionLabel(state.cfg), desc: "Backends for typing and clipboard fallback.", value: "injection"})
 	}
-	items = append(items, optionItem{title: formatAdvancedInjectionTimeoutLabel(state.cfg), desc: "Timeouts for ydotool, wtype, clipboard.", value: "timeouts"})
+	items = append(items, optionItem{title: formatAdvancedInjectionTimeoutLabel(state.cfg), desc: "Timeouts for ydotool, wtype, dotool, and clipboard.", value: "timeouts"})
 	if onboarding {
 		items = append(items, optionItem{title: "Next", desc: "Continue without changing advanced settings.", value: "next"})
 	}

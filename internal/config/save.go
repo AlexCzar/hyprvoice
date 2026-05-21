@@ -275,7 +275,7 @@ keywords = []
 # ─────────────────────────────────────────────────────────────────────────────
 
 [injection]
-  backends = ["ydotool", "wtype", "clipboard", "dotool"]  # Ordered fallback chain (tries each until one succeeds)
+  backends = ["ydotool", "wtype", "dotool", "clipboard"]  # Ordered fallback chain (tries each until one succeeds)
   ydotool_timeout = "5s"       # Timeout for ydotool commands
   wtype_timeout = "5s"         # Timeout for wtype commands
   clipboard_timeout = "3s"     # Timeout for clipboard operations
@@ -336,6 +336,7 @@ keywords = []
 # Injection backends:
 # - "ydotool": Uses ydotool (requires ydotoold daemon). Best for Chromium/Electron apps.
 # - "wtype": Uses wtype for Wayland. May have issues with some Chromium apps.
+# - "dotool": Uses dotool via dotoold/dotoolc for low-latency keystroke simulation.
 # - "clipboard": Copies to clipboard only (most reliable, requires manual paste).
 #
 # Language codes: "" (auto-detect), "en", "it", "es", "fr", "de", "pt", etc.

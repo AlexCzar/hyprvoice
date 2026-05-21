@@ -468,8 +468,8 @@ clipboard_timeout = "3s"
 
 - **`ydotool`**: Uses ydotool (requires `ydotoold` daemon for ydotool v1.0.0+). Most compatible with Chromium/Electron apps.
 - **`wtype`**: Uses wtype for Wayland. May have issues with some Chromium-based apps (known upstream bug).
+- **`dotool`**: Uses dotool via dotoold/dotoolc for low-latency keystroke simulation.
 - **`clipboard`**: Copies text to clipboard only. Most reliable, but requires manual paste.
-- **`dotool`**: Uses dotool (incredibly fast typing simulation using uinput, requires the user to be in the `input` group)
 
 ### Fallback Chain
 

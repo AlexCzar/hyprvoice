@@ -12,7 +12,7 @@ type Injector interface {
 }
 
 type Config struct {
-	Backends         []string      // Ordered list: "ydotool", "wtype", "clipboard"
+	Backends         []string      // Ordered list: "ydotool", "wtype", "dotool", "clipboard"
 	YdotoolTimeout   time.Duration // Timeout for ydotool commands
 	WtypeTimeout     time.Duration // Timeout for wtype commands
 	ClipboardTimeout time.Duration // Timeout for clipboard operations
