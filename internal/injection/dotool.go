@@ -16,7 +16,6 @@ type DotoolBackend struct {
 
 func NewDotoolBackend(delayMs int64, holdMs int64) Backend {
 	return &DotoolBackend{delayMs: delayMs, holdMs: holdMs}
-
 }
 
 func (c *DotoolBackend) Name() string {
@@ -53,17 +52,7 @@ func (c *DotoolBackend) Inject(ctx context.Context, text string, timeout time.Du
 		return fmt.Errorf("dotoolc failed: %w", err)
 	}
 
-	var typeCommands strings.Builder
-	lines := strings.Split(text, "\n")
-	for i, line := range lines {
-		fmt.Fprintf(&typeCommands, "type %s\n", line)
-		if i < len(lines)-1 {
-			fmt.Fprintf(&typeCommands, "key Return\n")
-			fmt.Fprintf(&typeCommands, "key enter\n")
-		}
-	}
-
-	if _, err := fmt.Fprintf(input, "typedelay %v\ntypehold %v\n%s", c.delayMs, c.holdMs, typeCommands.String()); err != nil {
+	if _, err := fmt.Fprint(input, c.commandStream(text)); err != nil {
 		input.Close()
 		return fmt.Errorf("writing to dotoolc stdin failed: %w", err)
 	}
@@ -75,4 +64,24 @@ func (c *DotoolBackend) Inject(ctx context.Context, text string, timeout time.Du
 	}
 
 	return nil
+}
+
+func (c *DotoolBackend) commandStream(text string) string {
+	text = strings.ReplaceAll(text, "\r\n", "\n")
+	text = strings.ReplaceAll(text, "\r", "\n")
+
+	var stream strings.Builder
+	fmt.Fprintf(&stream, "typedelay %v\ntypehold %v\n", c.delayMs, c.holdMs)
+
+	lines := strings.Split(text, "\n")
+	for i, line := range lines {
+		if line != "" {
+			fmt.Fprintf(&stream, "type %s\n", line)
+		}
+		if i < len(lines)-1 {
+			fmt.Fprint(&stream, "key enter\n")
+		}
+	}
+
+	return stream.String()
 }
