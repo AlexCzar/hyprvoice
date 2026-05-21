@@ -1749,6 +1749,88 @@ func TestConfig_LLMDefaultsPreserveExplicit(t *testing.T) {
 	}
 }
 
+func TestConfig_Load_DotoolDefaultsForMissingFields(t *testing.T) {
+	config := loadConfigFromString(t, `
+[recording]
+sample_rate = 16000
+channels = 1
+format = "s16"
+buffer_size = 8192
+channel_buffer_size = 30
+timeout = "5m"
+
+[transcription]
+provider = "openai"
+model = "whisper-1"
+
+[providers.openai]
+api_key = "test-key"
+
+[injection]
+backends = ["clipboard"]
+ydotool_timeout = "5s"
+wtype_timeout = "5s"
+clipboard_timeout = "3s"
+
+[notifications]
+type = "log"
+`)
+
+	if config.Injection.DotoolTimeout != 5*time.Second {
+		t.Errorf("DotoolTimeout = %v, want 5s", config.Injection.DotoolTimeout)
+	}
+	if config.Injection.DotoolTypedelay != time.Millisecond {
+		t.Errorf("DotoolTypedelay = %v, want 1ms", config.Injection.DotoolTypedelay)
+	}
+	if config.Injection.DotoolTypehold != 2*time.Millisecond {
+		t.Errorf("DotoolTypehold = %v, want 2ms", config.Injection.DotoolTypehold)
+	}
+	if err := config.Validate(); err != nil {
+		t.Errorf("Validate() error = %v", err)
+	}
+}
+
+func TestConfig_Load_PreservesExplicitDotoolZeroDelays(t *testing.T) {
+	config := loadConfigFromString(t, `
+[recording]
+sample_rate = 16000
+channels = 1
+format = "s16"
+buffer_size = 8192
+channel_buffer_size = 30
+timeout = "5m"
+
+[transcription]
+provider = "openai"
+model = "whisper-1"
+
+[providers.openai]
+api_key = "test-key"
+
+[injection]
+backends = ["dotool", "clipboard"]
+ydotool_timeout = "5s"
+wtype_timeout = "5s"
+clipboard_timeout = "3s"
+dotool_timeout = "5s"
+dotool_typedelay = "0s"
+dotool_typehold = "0s"
+
+[notifications]
+type = "log"
+`)
+
+	if config.Injection.DotoolTypedelay != 0 {
+		t.Errorf("DotoolTypedelay = %v, want explicit 0s", config.Injection.DotoolTypedelay)
+	}
+	if config.Injection.DotoolTypehold != 0 {
+		t.Errorf("DotoolTypehold = %v, want explicit 0s", config.Injection.DotoolTypehold)
+	}
+	if err := config.Validate(); err != nil {
+		t.Errorf("Validate() error = %v", err)
+	}
+}
+
 func TestConfig_Validate_WhisperCpp(t *testing.T) {
 	baseConfig := func() *Config {
 		return &Config{
@@ -2088,4 +2170,25 @@ type = "log"`
 			t.Errorf("Expected effective language 'es', got %q", transcriberConfig.Language)
 		}
 	})
+}
+
+func loadConfigFromString(t *testing.T, content string) *Config {
+	t.Helper()
+
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "hyprvoice", "config.toml")
+	if err := os.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
+		t.Fatalf("Failed to create config directory: %v", err)
+	}
+	if err := os.WriteFile(configPath, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to create config file: %v", err)
+	}
+
+	t.Setenv("XDG_CONFIG_HOME", tempDir)
+
+	config, err := Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	return config
 }
