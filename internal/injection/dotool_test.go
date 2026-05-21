@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -117,10 +118,10 @@ func TestDotoolAvailableCheck(t *testing.T) {
 
 	err := backend.Available()
 	if err == nil {
-		t.Skip("dotoolc is installed, skipping availability check")
+		t.Skip("dotool is installed, skipping availability check")
 	}
-	if !strings.Contains(err.Error(), "dotoolc") {
-		t.Errorf("Expected error mentioning dotoolc, got: %v", err)
+	if !strings.Contains(err.Error(), "dotool") {
+		t.Errorf("Expected error mentioning dotool, got: %v", err)
 	}
 }
 
@@ -134,22 +135,185 @@ func TestDotoolInjectWithFakeCommand(t *testing.T) {
 	}
 }
 
+func TestDotoolUsesClientWhenDaemonPipeIsActive(t *testing.T) {
+	tmpDir := t.TempDir()
+	stdinFile := filepath.Join(tmpDir, "stdin.txt")
+	pipe := filepath.Join(tmpDir, "dotool-pipe")
+	if err := syscall.Mkfifo(pipe, 0600); err != nil {
+		t.Fatalf("failed to create fifo: %v", err)
+	}
+
+	reader, err := os.OpenFile(pipe, os.O_RDONLY|syscall.O_NONBLOCK, 0)
+	if err != nil {
+		t.Fatalf("failed to hold fifo reader open: %v", err)
+	}
+	defer reader.Close()
+
+	writeScript(t, filepath.Join(tmpDir, "dotoolc"), fmt.Sprintf(`#!/bin/sh
+/bin/cat > "%s"
+exit 0
+`, stdinFile))
+	writeScript(t, filepath.Join(tmpDir, "dotool"), `#!/bin/sh
+echo wrong-backend >&2
+exit 42
+`)
+
+	t.Setenv("PATH", tmpDir)
+	t.Setenv("DOTOOL_PIPE", pipe)
+
+	backend := NewDotoolBackend(1, 2)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := backend.Inject(ctx, "daemon path", 5*time.Second); err != nil {
+		t.Fatalf("Inject failed: %v", err)
+	}
+
+	gotBytes, err := os.ReadFile(stdinFile)
+	if err != nil {
+		t.Fatalf("failed to read captured stdin: %v", err)
+	}
+	want := "typedelay 1\ntypehold 2\ntype daemon path\n"
+	if got := string(gotBytes); got != want {
+		t.Errorf("captured stdin mismatch\nwant:\n%s\ngot:\n%s", want, got)
+	}
+}
+
+func TestDotoolFallsBackToDirectCommandWithoutDaemon(t *testing.T) {
+	tmpDir := t.TempDir()
+	stdinFile := filepath.Join(tmpDir, "stdin.txt")
+
+	writeScript(t, filepath.Join(tmpDir, "dotoolc"), `#!/bin/sh
+echo dotoolc should not run >&2
+exit 42
+`)
+	writeScript(t, filepath.Join(tmpDir, "dotool"), fmt.Sprintf(`#!/bin/sh
+/bin/cat > "%s"
+exit 0
+`, stdinFile))
+
+	t.Setenv("PATH", tmpDir)
+	t.Setenv("DOTOOL_PIPE", filepath.Join(tmpDir, "missing-pipe"))
+
+	backend := NewDotoolBackend(1, 2)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := backend.Inject(ctx, "direct path", 5*time.Second); err != nil {
+		t.Fatalf("Inject failed: %v", err)
+	}
+
+	gotBytes, err := os.ReadFile(stdinFile)
+	if err != nil {
+		t.Fatalf("failed to read captured stdin: %v", err)
+	}
+	want := "typedelay 1\ntypehold 2\ntype direct path\n"
+	if got := string(gotBytes); got != want {
+		t.Errorf("captured stdin mismatch\nwant:\n%s\ngot:\n%s", want, got)
+	}
+}
+
+func TestDotoolDirectCommandWarningsFailForFallback(t *testing.T) {
+	tmpDir := t.TempDir()
+	stdinFile := filepath.Join(tmpDir, "stdin.txt")
+
+	writeScript(t, filepath.Join(tmpDir, "dotool"), fmt.Sprintf(`#!/bin/sh
+/bin/cat > "%s"
+echo "impossible character for layout: U+1F41F" >&2
+exit 0
+`, stdinFile))
+
+	t.Setenv("PATH", tmpDir)
+	t.Setenv("DOTOOL_PIPE", filepath.Join(tmpDir, "missing-pipe"))
+
+	backend := NewDotoolBackend(1, 2)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := backend.Inject(ctx, "bad char", 5*time.Second)
+	if err == nil {
+		t.Fatal("Inject() nil error, want warning error")
+	}
+	if !strings.Contains(err.Error(), "completed with warnings") {
+		t.Fatalf("Inject() error = %v, want warning error", err)
+	}
+}
+
+func TestDotooldActiveDetection(t *testing.T) {
+	backend := NewDotoolBackend(1, 2).(*DotoolBackend)
+	tmpDir := t.TempDir()
+
+	t.Run("missing pipe", func(t *testing.T) {
+		t.Setenv("DOTOOL_PIPE", filepath.Join(tmpDir, "missing"))
+		if err := backend.dotooldActive(); err == nil {
+			t.Fatal("dotooldActive() nil error, want missing pipe error")
+		}
+	})
+
+	t.Run("fifo without reader", func(t *testing.T) {
+		pipe := filepath.Join(t.TempDir(), "fifo")
+		if err := syscall.Mkfifo(pipe, 0600); err != nil {
+			t.Fatalf("failed to create fifo: %v", err)
+		}
+		t.Setenv("DOTOOL_PIPE", pipe)
+		if err := backend.dotooldActive(); err == nil {
+			t.Fatal("dotooldActive() nil error, want no reader error")
+		}
+	})
+
+	t.Run("fifo with unsafe permissions", func(t *testing.T) {
+		pipe := filepath.Join(t.TempDir(), "fifo")
+		if err := syscall.Mkfifo(pipe, 0600); err != nil {
+			t.Fatalf("failed to create fifo: %v", err)
+		}
+		if err := os.Chmod(pipe, 0666); err != nil {
+			t.Fatalf("failed to chmod fifo: %v", err)
+		}
+		t.Setenv("DOTOOL_PIPE", pipe)
+		err := backend.dotooldActive()
+		if err == nil {
+			t.Fatal("dotooldActive() nil error, want unsafe permissions error")
+		}
+		if !strings.Contains(err.Error(), "unsafe permissions") {
+			t.Fatalf("dotooldActive() error = %v, want unsafe permissions error", err)
+		}
+	})
+
+	t.Run("fifo with reader", func(t *testing.T) {
+		pipe := filepath.Join(t.TempDir(), "fifo")
+		if err := syscall.Mkfifo(pipe, 0600); err != nil {
+			t.Fatalf("failed to create fifo: %v", err)
+		}
+		reader, err := os.OpenFile(pipe, os.O_RDONLY|syscall.O_NONBLOCK, 0)
+		if err != nil {
+			t.Fatalf("failed to hold fifo reader open: %v", err)
+		}
+		defer reader.Close()
+
+		t.Setenv("DOTOOL_PIPE", pipe)
+		if err := backend.dotooldActive(); err != nil {
+			t.Fatalf("dotooldActive() error = %v, want nil", err)
+		}
+	})
+}
+
 func captureDotoolStdin(t *testing.T, backend Backend, text string) string {
 	t.Helper()
 
 	tmpDir := t.TempDir()
 	stdinFile := filepath.Join(tmpDir, "stdin.txt")
 	fakeDotoolc := filepath.Join(tmpDir, "dotoolc")
+	fakeDotool := filepath.Join(tmpDir, "dotool")
 
 	fakeScript := fmt.Sprintf(`#!/bin/sh
-cat > "%s"
+/bin/cat > "%s"
 exit 0
 `, stdinFile)
-	if err := os.WriteFile(fakeDotoolc, []byte(fakeScript), 0755); err != nil {
-		t.Fatalf("failed to create fake dotoolc: %v", err)
-	}
+	writeScript(t, fakeDotoolc, fakeScript)
+	writeScript(t, fakeDotool, fakeScript)
 
-	t.Setenv("PATH", tmpDir+":"+os.Getenv("PATH"))
+	t.Setenv("PATH", tmpDir)
+	t.Setenv("DOTOOL_PIPE", filepath.Join(tmpDir, "missing-pipe"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -164,4 +328,11 @@ exit 0
 	}
 
 	return string(got)
+}
+
+func writeScript(t *testing.T, path, script string) {
+	t.Helper()
+	if err := os.WriteFile(path, []byte(script), 0755); err != nil {
+		t.Fatalf("failed to create %s: %v", path, err)
+	}
 }

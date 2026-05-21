@@ -336,7 +336,7 @@ keywords = []
 # Injection backends:
 # - "ydotool": Uses ydotool (requires ydotoold daemon). Best for Chromium/Electron apps.
 # - "wtype": Uses wtype for Wayland. May have issues with some Chromium apps.
-# - "dotool": Uses dotool via dotoold/dotoolc for low-latency keystroke simulation.
+# - "dotool": Uses dotoold/dotoolc when running, otherwise direct dotool. dotoolc may return before typing fully finishes.
 # - "clipboard": Copies to clipboard only (most reliable, requires manual paste).
 #
 # Language codes: "" (auto-detect), "en", "it", "es", "fr", "de", "pt", etc.

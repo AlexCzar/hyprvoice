@@ -16,7 +16,7 @@ type Config struct {
 	YdotoolTimeout   time.Duration // Timeout for ydotool commands
 	WtypeTimeout     time.Duration // Timeout for wtype commands
 	ClipboardTimeout time.Duration // Timeout for clipboard operations
-	DotoolTimeout    time.Duration // Timeout for dotoolc commands
+	DotoolTimeout    time.Duration // Timeout for dotool commands
 	DotoolTypedelay  time.Duration // Set the delay between each key
 	DotoolTypehold   time.Duration // Set the hold time for each key
 }

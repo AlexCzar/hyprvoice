@@ -554,20 +554,39 @@ func newKeywordsScreen(state *wizardState, onBack func() screen) screen {
 
 func newInjectionScreen(state *wizardState, onBack func() screen) screen {
 	selected := state.cfg.Injection.Backends
+	defaultOrder := []string{"ydotool", "wtype", "dotool", "clipboard"}
 	if len(selected) == 0 {
-		selected = []string{"ydotool", "wtype", "dotool", "clipboard"}
+		selected = defaultOrder
 	}
 	selectedSet := make(map[string]bool, len(selected))
 	for _, b := range selected {
 		selectedSet[b] = true
 	}
 
-	items := []toggleItem{
-		{title: "ydotool", desc: "Best for Chromium/Electron. Requires ydotoold.", value: "ydotool", selected: selectedSet["ydotool"]},
-		{title: "wtype", desc: "Native Wayland typing.", value: "wtype", selected: selectedSet["wtype"]},
-		{title: "dotool", desc: "Send keystrokes via dotool. Requires dotoolc.", value: "dotool", selected: selectedSet["dotool"]},
-		{title: "clipboard", desc: "Copy to clipboard only.", value: "clipboard", selected: selectedSet["clipboard"]},
+	backendItems := map[string]toggleItem{
+		"ydotool":   {title: "ydotool", desc: "Best for Chromium/Electron. Requires ydotoold.", value: "ydotool"},
+		"wtype":     {title: "wtype", desc: "Native Wayland typing.", value: "wtype"},
+		"dotool":    {title: "dotool", desc: "Send keystrokes via dotool. Uses dotoold when running.", value: "dotool"},
+		"clipboard": {title: "clipboard", desc: "Copy to clipboard only.", value: "clipboard"},
 	}
+	items := make([]toggleItem, 0, len(defaultOrder))
+	added := make(map[string]bool, len(defaultOrder))
+	addBackend := func(name string) {
+		item, ok := backendItems[name]
+		if !ok || added[name] {
+			return
+		}
+		item.selected = selectedSet[name]
+		items = append(items, item)
+		added[name] = true
+	}
+	for _, name := range selected {
+		addBackend(name)
+	}
+	for _, name := range defaultOrder {
+		addBackend(name)
+	}
+
 	desc := []string{"Backends are tried in order until one succeeds.", "Tip: press / to filter."}
 	screen := newMultiSelectScreen(state, "Text Injection Backends", desc, items, true, func(items []toggleItem) screen {
 		var backends []string

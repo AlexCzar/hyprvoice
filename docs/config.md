@@ -468,7 +468,7 @@ clipboard_timeout = "3s"
 
 - **`ydotool`**: Uses ydotool (requires `ydotoold` daemon for ydotool v1.0.0+). Most compatible with Chromium/Electron apps.
 - **`wtype`**: Uses wtype for Wayland. May have issues with some Chromium-based apps (known upstream bug).
-- **`dotool`**: Uses dotool via dotoold/dotoolc for low-latency keystroke simulation.
+- **`dotool`**: Uses dotoold/dotoolc when the daemon is running, otherwise falls back to direct `dotool`.
 - **`clipboard`**: Copies text to clipboard only. Most reliable, but requires manual paste.
 
 ### Fallback Chain
@@ -509,14 +509,14 @@ sudo usermod -aG input $USER
 
 ### dotool Setup
 
-dotool requires the dotoold daemon running and access to `/dev/uinput`.
+dotool requires access to `/dev/uinput`. It uses dotoold/dotoolc automatically when dotoold is already running, and falls back to direct `dotool` when it is not.
 
 ```bash
 sudo usermod -aG input $USER
 # Then logout/login
 ```
 
-This backend relies on dotoold/dotoolc for minimal latency, so you need to make sure dotoold is running, you can start it manually, or write a small user-level systemd service, like this:
+dotoold is optional but recommended for minimal latency. When dotoold is used, `dotoolc` queues commands and may return before typing has fully finished. You can start dotoold manually, or write a small user-level systemd service, like this:
 
 ```ini
 [Unit]
