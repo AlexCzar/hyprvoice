@@ -11,16 +11,6 @@ import (
 )
 
 func TestDotoolMultilineHandling(t *testing.T) {
-	tmpDir := t.TempDir()
-	fakeDotoolc := filepath.Join(tmpDir, "dotoolc")
-
-	script := `#!/bin/sh
-cat > "$1"
-`
-	if err := os.WriteFile(fakeDotoolc, []byte(script), 0755); err != nil {
-		t.Fatalf("failed to create fake dotoolc: %v", err)
-	}
-
 	tests := []struct {
 		name     string
 		text     string
@@ -29,50 +19,60 @@ cat > "$1"
 		wantCmds string
 	}{
 		{
-			name:  "single line",
-			text:  "hello",
-			delay: 1,
-			hold:  2,
+			name:     "single line",
+			text:     "hello",
+			delay:    1,
+			hold:     2,
 			wantCmds: "typedelay 1\ntypehold 2\ntype hello\n",
 		},
 		{
-			name:  "multiline preserves newlines",
-			text:  "hello\nworld",
-			delay: 1,
-			hold:  2,
+			name:     "multiline preserves newline with enter",
+			text:     "hello\nworld",
+			delay:    1,
+			hold:     2,
 			wantCmds: "typedelay 1\ntypehold 2\ntype hello\nkey enter\ntype world\n",
 		},
 		{
-			name:  "three lines",
-			text:  "a\nb\nc",
-			delay: 5,
-			hold:  10,
+			name:     "three lines",
+			text:     "a\nb\nc",
+			delay:    5,
+			hold:     10,
 			wantCmds: "typedelay 5\ntypehold 10\ntype a\nkey enter\ntype b\nkey enter\ntype c\n",
 		},
 		{
-			name:  "trailing newline",
-			text:  "hello\n",
-			delay: 1,
-			hold:  2,
-			wantCmds: "typedelay 1\ntypehold 2\ntype hello\n",
+			name:     "blank line",
+			text:     "a\n\nb",
+			delay:    1,
+			hold:     2,
+			wantCmds: "typedelay 1\ntypehold 2\ntype a\nkey enter\nkey enter\ntype b\n",
+		},
+		{
+			name:     "trailing newline",
+			text:     "hello\n",
+			delay:    1,
+			hold:     2,
+			wantCmds: "typedelay 1\ntypehold 2\ntype hello\nkey enter\n",
+		},
+		{
+			name:     "crlf newline",
+			text:     "hello\r\nworld",
+			delay:    1,
+			hold:     2,
+			wantCmds: "typedelay 1\ntypehold 2\ntype hello\nkey enter\ntype world\n",
+		},
+		{
+			name:     "newline does not inject dotool command",
+			text:     "hello\nkey super",
+			delay:    1,
+			hold:     2,
+			wantCmds: "typedelay 1\ntypehold 2\ntype hello\nkey enter\ntype key super\n",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			backend := NewDotoolBackend(tt.delay, tt.hold)
-			db := backend.(*DotoolBackend)
-
-			var input strings.Builder
-			lines := strings.Split(tt.text, "\n")
-			for i, line := range lines {
-				fmt.Fprintf(&input, "type %s\n", line)
-				if i < len(lines)-1 {
-					fmt.Fprintf(&input, "key enter\n")
-				}
-			}
-
-			got := fmt.Sprintf("typedelay %v\ntypehold %v\n%s", db.delayMs, db.holdMs, input.String())
+			got := captureDotoolStdin(t, backend, tt.text)
 			if got != tt.wantCmds {
 				t.Errorf("command stream mismatch\nwant:\n%s\ngot:\n%s", tt.wantCmds, got)
 			}
@@ -125,29 +125,36 @@ func TestDotoolAvailableCheck(t *testing.T) {
 }
 
 func TestDotoolInjectWithFakeCommand(t *testing.T) {
+	backend := NewDotoolBackend(1, 2)
+	got := captureDotoolStdin(t, backend, "hello\nworld")
+
+	want := "typedelay 1\ntypehold 2\ntype hello\nkey enter\ntype world\n"
+	if got != want {
+		t.Errorf("captured stdin mismatch\nwant:\n%s\ngot:\n%s", want, got)
+	}
+}
+
+func captureDotoolStdin(t *testing.T, backend Backend, text string) string {
+	t.Helper()
+
 	tmpDir := t.TempDir()
 	stdinFile := filepath.Join(tmpDir, "stdin.txt")
+	fakeDotoolc := filepath.Join(tmpDir, "dotoolc")
 
 	fakeScript := fmt.Sprintf(`#!/bin/sh
 cat > "%s"
 exit 0
 `, stdinFile)
-
-	fakeDotoolc := filepath.Join(tmpDir, "dotoolc")
 	if err := os.WriteFile(fakeDotoolc, []byte(fakeScript), 0755); err != nil {
 		t.Fatalf("failed to create fake dotoolc: %v", err)
 	}
 
-	oldPath := os.Getenv("PATH")
-	os.Setenv("PATH", tmpDir+":"+oldPath)
-	defer os.Setenv("PATH", oldPath)
+	t.Setenv("PATH", tmpDir+":"+os.Getenv("PATH"))
 
-	backend := NewDotoolBackend(1, 2)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := backend.Inject(ctx, "hello\nworld", 5*time.Second)
-	if err != nil {
+	if err := backend.Inject(ctx, text, 5*time.Second); err != nil {
 		t.Fatalf("Inject failed: %v", err)
 	}
 
@@ -156,8 +163,5 @@ exit 0
 		t.Fatalf("failed to read captured stdin: %v", err)
 	}
 
-	want := "typedelay 1\ntypehold 2\ntype hello\nkey enter\ntype world\n"
-	if string(got) != want {
-		t.Errorf("captured stdin mismatch\nwant:\n%s\ngot:\n%s", want, string(got))
-	}
+	return string(got)
 }
